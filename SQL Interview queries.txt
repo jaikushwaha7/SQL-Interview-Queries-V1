@@ -1,0 +1,199 @@
+Write a prepared SQL statement named find_sections that takes a user ID as a parameter (of integer type). Use $1 as a placeholder for the user ID parameter.
+
+prepare find_sections (integer) as
+select id, section_name
+from section_access
+where ',' || user_access || ',' like '%,' || $1 || ',%'
+order by id asc;
+
+prepare find_sections(int) as select id,section_name from section_access where $1 =any(regexp_split_to_array(user_access,',')::int[])
+
+prepare find_sections(int) as
+Select id, section_name from section_access
+WHERE user_access LIKE CONCAT($1,',%') OR user_access LIKE CONCAT('%,',$1,',%') OR user_access LIKE CONCAT('%,',$1)
+GROUP BY id, section_name
+order by id;
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+P(R) represents a pattern drawn by Julia in R rows. The following pattern represents P(5):
+
+* * * * * 
+* * * * 
+* * * 
+* * s
+*
+Write a query to print the pattern P(20).
+set @number = 21;
+select repeat('* ', @number := @number - 1) from information_schema.tables limit 20;
+
+WITH RECURSIVE DecreasingStars AS (
+    SELECT 20 AS NumOfStars
+    UNION ALL
+    SELECT NumOfStars - 1
+    FROM DecreasingStars
+    WHERE NumOfStars > 1
+  )
+  SELECT REPEAT('* ', NumOfStars) AS Stars
+  FROM DecreasingStars;
+  
+1. Write a sql query to find the nth hishest salary from the employee tables
+Example finding the 3rd highest salary
+select * from employee order by salary desc limit n-1, 1;
+select * from employee order by salary desc limit 2, 1;
+
+2. Write a query to find top n records?
+Example to find top 5 records from the employee table
+select * from employee order by salary desc limit 5;
+
+3. Write a sql query to find the count of employees working in department Admin
+select count(*) from employee where department ='Admin';
+
+4. Write a query to fetch department wise count employees sorted by epartment count in desc order
+select department, count(*), as empcount
+from employee group by department 
+order by empcount desc;
+
+5. Write a query to fetch only the first name string before the pace from the full name column of user_name
+select distinct(substring_index(full_names, ' ',1)) first_name from user_name;
+
+6. Write a sql query to find all the employees from the employee table who are also managers
+select e1.first_name, e2.last_name from employee e1
+join employee e2
+on e1.employee_id = e2.manager_id;
+
+7. Write a sql query to find all the employees who have bonus record in bonus table
+select * from employee where employee_id in (select employee_ref_id from bonus where employee.employee_id = bonus.employee_ref_id);
+
+8. Write a sql query to find only odd rows from employee table
+select * from employee where MOD(employee_id,2)<>0;
+
+9. Write a sql query to fetch first_name from the employee table in upper case
+select upper(first_name) from employee ;
+
+10. Write a sql query to get combine name first and last name of employees from the employee table
+select concat(first_name, ' ' , last_name) as Name from employee;
+
+11. Write a sql query to print details of employee of employee Jennifer and James
+select * from employee where first_name in ('Jennifer', 'James');
+
+12. Write a sql query to fetch records of employee whose salary lies between
+select * from employee where salary between 1000 and 3000;
+
+13. Write a sql query to get records of employee who have joined in Jan 2017
+select first_name, last_name , joining_date from employee
+where year(joining_date)=2017 and month(joining_date)=1;
+
+14. Write a sql query to get the list of employees with the same salary
+select e1. first_name, e2.last_name from employee e1 , employee e2
+where e1.salary = e2.salary and e1.employee_id!= e2.employee_id;
+
+15. Write a sql query to show all departments along with the number of people working here
+select department , count(*) as number_of_employee from employee
+group by department
+order by count(department);
+
+16. Write a sql query to show the last record from a table
+select * from employee where employee_id= (select max(employee_id) from employee);
+
+17. Write a sql query to show the first record from the table
+select * from employee where employee_id = (select min(employee_id) from employee);
+
+18. Write a sql query to get the last 5 records from the employee table
+(select * from employee order employee_id desc limit 5) order by employee_id;
+
+19. Write a sql query to find employees having the highest salary in each department
+select first_name, last_name, department, max(salary) as Max_salary from employee
+group by department order by max(salary);
+
+20. Write a sql query to fetch 3 max salary from the employee table
+select distinct salary from employee order by salary desc limit 3;
+or
+select distinct salary from employee e1 
+where 3>= (select count(distinct salary) from employee e2 where e1.salary<=e2.salary) order by e1.salary desc;
+
+21. Write a sql query to fetch departments along with the total salaries paid for each of them
+select department , sum(salary) from employee group by department order by sum(salary);
+
+22. Write a sql query to find employee with highest salary in an organisation from the employee table
+select first_name, last_name from employee where salary = (select max(salary) from employee);
+
+23. Write a sql query that makes recommendations using the pages that your friends liked
+Assume you have two tables :  a 2 column table of users and their friends and 2 column table of users and the page they liked.
+
+24. Write a sql query to find employee first name last name department and bonus with highest bonus
+select first_name, last_name , department , max(bonus_amount) from employee e
+join bonus b
+on e.employee_id = b.employee_ref_id
+group by department 
+order by max(bonus_amount) desc limit 1;
+
+25. Write a sql query to find employees with the same salary
+select e1.first_name, e2.last_name from employee e1 , employee e2
+where e1.salary = e2.salary
+and e1.employee_id != e2.employee_id;
+
+26. Write a sql query to find out what percent of students attended school on their birthday from attendance_events and all_students table
+select (count(attendance_events.student_id) *100/ (select count(student_id) from attendance_events)) as percent
+from attendance_events
+join all_students
+on all_students.student_id = attendance_events.student_id
+where month(attendance_events.date_event) = month(all_students.date_of_birth)
+and day(attendance_events.date_event) = day(all_students.date_of_birth);
+
+27. Given timestamps of logins, figure out how many people on Facebook were active on all seven days of a week on a mobile phone from login info table
+
+select a.login_time, count(distinct a.user_id) from login_info a
+left join login_info b 
+on a.user_id = b.user_id
+where a.login_time = b.login_time - interval 1 day
+group by 1;
+
+28. Write a sql query to find out the overall friend acceptance rate for a given data from the user_action table
+select count(a.user_id_who_sent)*100 / (select count(user_id_who_sent) from user_action) as percent
+from user_action a 
+join user_action b 
+on a.user_id_who_sent = b.user_id_who_sent and a.user_id_to_whom = b.user_id_to_whom
+where a.date_action = '2018-10-24' and b.action = 'accepted';
+
+29. How many total users follow sport accoutns from tables all_users sport_account follow_relation
+select count(distinct c.follower_id) as count_all sports_followers
+from sport_account as a
+join all_users b 
+on a.sport_player_id = b.user_id
+join follow_relation c
+on b.user_id = c.target_id;
+
+30. How many active users follow each type of sport
+select b.sport_category, count(a.user_id)
+from all_users a 
+join sport_account b 
+on a.user_id = b.sport_player_id 
+join follow_relation c 
+on a.user_id = c.follwer_id 
+where a.active_last_month = 1
+group by b.sport_category;
+
+31. What percent of active accounts are fraud from ad_accounts table
+select count(distinct a.account_id)/ (select count(account_id) from ad_accounts where account_status = 'active') as percent
+from ad_accounts a 
+koin ad_accounts b 
+on a.account_id = b.account_id
+where a.account_status = 'Fraud' and b.account_status = 'active'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
